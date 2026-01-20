@@ -3,7 +3,7 @@ version: "3.9"
 services:
 
   nginx:
-    image: ${DOCKERHUB_USERNAME}/nginx:${IMAGE_TAG}
+    image: ${DOCKER_USERNAME}/nginx:${IMAGE_TAG}
     build: ./nginx
     ports:
       - "80:80"
@@ -12,14 +12,14 @@ services:
       - backend
 
   frontend:
-    image: ${DOCKERHUB_USERNAME}/frontend:${IMAGE_TAG}
+    image: ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
     build:
       context: ./frontend
       args:
         VITE_API_URL: https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/backend:${IMAGE_TAG}
+    image: ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
     build: ./backend
     environment:
       DB_HOST: ${DB_HOST}
