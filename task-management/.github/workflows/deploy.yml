@@ -2,8 +2,9 @@ name: Build & Deploy to Azure (Docker Hub, SHA Tags)
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 
 jobs:
   build-and-deploy:
