@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+
+  nginx:
+    image: ${DOCKER_USERNAME}/nginx:${IMAGE_TAG}
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+
+  frontend:
+    image: ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api
+
+  backend:
+    image: ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
+    build: ./backend
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
+      DB_PORT: 1433
+    expose:
+      - "3000"

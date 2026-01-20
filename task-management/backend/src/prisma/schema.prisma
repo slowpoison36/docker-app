@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model TASK_MANAGEMENT {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(100)
+  description String    @db.VarChar(500)
+  status      String?   @db.VarChar(50)
+  create_date DateTime? @default(now(), map: "DF__TASK_MANA__creat__160F4887")
+  due_date    DateTime  @db.Date
+}

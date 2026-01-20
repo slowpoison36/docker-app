@@ -6,17 +6,16 @@ import {
   type Task,
   type TaskDetail,
 } from "../context/TaskContext";
-import { taskData } from "../mocks/task-data";
 
-const initalState: TaskDetail = {
-  tasks: taskData,
-  filteredTasks: taskData,
-  searchParams: [],
-};
+// const initalState: TaskDetail = {
+//   tasks: taskData,
+//   filteredTasks: taskData,
+//   searchParams: [],
+// };
 
 export function TaskReducer(
   state: TaskDetail,
-  action: { type: string; payload: unknown }
+  action: { type: string; payload: unknown },
 ): TaskDetail {
   switch (action?.type) {
     case Task_Actions.LOAD_TODOS: {
@@ -62,8 +61,8 @@ export function TaskReducer(
         Object.keys(searchParam).every((val) =>
           searchParam[val]
             ? task[val]?.toLowerCase().includes(searchParam[val]?.toLowerCase())
-            : true
-        )
+            : true,
+        ),
       );
       return {
         ...state,
@@ -87,7 +86,11 @@ export function TaskReducer(
 }
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
-  const [taskDetails, dispatch] = useReducer(TaskReducer, initalState);
+  const [taskDetails, dispatch] = useReducer(TaskReducer, {
+    tasks: [],
+    filteredTasks: [],
+    searchParams: [],
+  });
 
   return (
     <TaskContext.Provider value={{ taskDetails, dispatch }}>
