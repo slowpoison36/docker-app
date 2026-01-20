@@ -9,7 +9,7 @@ export const Task_Actions = {
   DELETE_TODOS: "DELETE_TODOS",
 };
 export interface Task {
-  id: number | null;
+  id?: number | null;
   title?: string;
   status: "TODO" | "IN-PROGRESS" | "DONE";
   description: string;

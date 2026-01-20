@@ -4,6 +4,7 @@ import useTaskContext, {
   Task_Actions,
   type Task,
 } from "../context/TaskContext";
+import { TaskApi } from "../api/TaskApi";
 
 export default function AddOrEditTask({
   mode = "ADD",
@@ -17,7 +18,7 @@ export default function AddOrEditTask({
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [status, setStatus] = useState<"TODO" | "IN-PROGRESS" | "DONE">(
-    task?.status || "TODO"
+    task?.status || "TODO",
   );
   const [dueDate, setDueDate] = useState(() => {
     if (task?.dueDate) {
@@ -29,7 +30,7 @@ export default function AddOrEditTask({
   const { dispatch } = useTaskContext();
   const [error, setError] = useState<any>(null);
 
-  const createTask = (e: any) => {
+  const createTask = async (e: any) => {
     e.preventDefault();
     for (const type of [
       { key: "title", value: title, message: "Title is required" },
@@ -45,19 +46,30 @@ export default function AddOrEditTask({
     }
 
     if (!title || !description || !status || !dueDate) return;
-    const [year, month, day] = dueDate.split("-");
-    const taskData: Task = {
-      id: task?.id || new Date().getTime(),
-      title: title,
-      status: status,
-      description,
-      dueDate: `${month}/${day}/${year}`,
-    };
+    try {
+      const [year, month, day] = dueDate.split("-");
+      let taskData: Task = {
+        title: title,
+        status: status,
+        description,
+        dueDate: `${month}/${day}/${year}`,
+      };
 
-    dispatch({
-      type: mode === "ADD" ? Task_Actions.ADD_TODOS : Task_Actions.EDIT_TODOS,
-      payload: taskData,
-    });
+      if (mode === "ADD") {
+        const createdTask = await TaskApi.createTask(taskData);
+        dispatch({
+          type: Task_Actions.ADD_TODOS,
+          payload: createdTask,
+        });
+      } else {
+        dispatch({
+          type: Task_Actions.EDIT_TODOS,
+          payload: taskData,
+        });
+      }
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
     handleClose?.();
   };
 
@@ -80,7 +92,7 @@ export default function AddOrEditTask({
               setTitle(e.target.value);
               handleErrorState(
                 "title",
-                e.target.value ? "" : "Title is required"
+                e.target.value ? "" : "Title is required",
               );
             }}
           />
@@ -97,7 +109,7 @@ export default function AddOrEditTask({
               setDescription(e.target.value);
               handleErrorState(
                 "description",
-                e.target.value ? "" : "Description is required"
+                e.target.value ? "" : "Description is required",
               );
             }}
           ></textarea>
