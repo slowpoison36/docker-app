@@ -5,8 +5,8 @@ services:
   nginx:
     image: ${DOCKER_USERNAME}/nginx:${IMAGE_TAG}
     build: ./task-management/nginx
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     depends_on:
       - frontend
       - backend
@@ -17,7 +17,8 @@ services:
       context: ./task-management/frontend
       args:
         VITE_API_URL: /api
-
+    expose:
+      - "80"
   backend:
     image: ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
     build: ./task-management/backend
