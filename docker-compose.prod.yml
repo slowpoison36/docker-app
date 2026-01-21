@@ -15,7 +15,7 @@ services:
     image: ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
     build:
       context: ./task-management/frontend
-      args:
+      environment:
         VITE_API_URL: https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api
 
   backend:
