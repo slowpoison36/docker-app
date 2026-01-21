@@ -52,6 +52,9 @@ jobs:
         az webapp config container set \
           --name ${{ secrets.AZURE_WEBAPP_NAME }} \
           --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+           --docker-registry-server-url https://index.docker.io/v1/ \
+          --docker-registry-server-user ${{ secrets.DOCKER_USERNAME }} \
+          --docker-registry-server-password ${{ secrets.DOCKER_ACCESS_TOKEN }} \
           --multicontainer-config-type compose \
           --multicontainer-config-file docker-compose.rendered.yml
 
