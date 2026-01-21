@@ -1,4 +1,4 @@
-name: Build & Deploy to Azure (Docker Hub, SHA Tags)
+name: "Build and Deploy to Azure (DockerHub SHA Tags)"
 
 on:
   push:
@@ -10,55 +10,58 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_SECURE_PASSWORD: ${{ secrets.DB_SECURE_PASSWORD }}
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Azure Login
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Set Image Tag
+        run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-    - name: Set Image Tag
-      run: |
-        echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-        
-    - name: Build DATABASE_URL
-      run: |
-       echo "DATABASE_URL=sqlserver://${ secrets.DB_HOST }:1433;database=${ secrets.DB_NAME };user=${ secrets.DB_USER };password=${ secrets.DB_SECURE_PASSWORD };encrypt=true" >> $GITHUB_ENV
-    - name: Build and Push Images
-      run: |
-        export DOCKER_USERNAME=${ secrets.DOCKER_USERNAME }
-        export AZURE_WEBAPP_NAME=${ secrets.AZURE_WEBAPP_NAME }
-        export DB_HOST=${ secrets.DB_HOST }
-        export DB_NAME=${ secrets.DB_NAME }
-        export DB_USER=${ secrets.DB_USER }
-        export DB_SECURE_PASSWORD=${ secrets.DB_SECURE_PASSWORD }
-        export IMAGE_TAG=${ env.IMAGE_TAG }
-        export DATABASE_URL=${ env.DATABASE_URL }
-        envsubst < docker-compose.prod.yml > docker-compose.rendered.yml
-        docker compose -f docker-compose.prod.yml build
-        docker compose -f docker-compose.prod.yml push
+      - name: Set DATABASE_URL
+        run: |
+          echo "DATABASE_URL=sqlserver://$DB_HOST:1433;database=$DB_NAME;user=$DB_USER;password=$DB_SECURE_PASSWORD;encrypt=true" >> $GITHUB_ENV
 
-    - name: Deploy to Azure
-      run: |
-        az webapp config container set \
-          --name ${ secrets.AZURE_WEBAPP_NAME } \
-          --resource-group ${ secrets.AZURE_RESOURCE_GROUP } \
-           --docker-registry-server-url https://index.docker.io/v1/ \
-          --docker-registry-server-user ${ secrets.DOCKER_USERNAME } \
-          --docker-registry-server-password ${ secrets.DOCKER_ACCESS_TOKEN } \
-          --multicontainer-config-type compose \
-          --multicontainer-config-file docker-compose.rendered.yml
+      - name: Render Compose File
+        run: |
+          envsubst < docker-compose.prod.yml > docker-compose.rendered.yml
 
+      - name: Build and Push Images
+        run: |
+          docker compose -f docker-compose.rendered.yml build
+          docker compose -f docker-compose.rendered.yml push
 
-        az webapp restart \
-          --name ${ secrets.AZURE_WEBAPP_NAME } \
-          --resource-group ${ secrets.AZURE_RESOURCE_GROUP }
+      - name: Deploy to Azure
+        run: |
+          az webapp config container set \
+            --name $AZURE_WEBAPP_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP \
+            --docker-registry-server-url https://index.docker.io/v1/ \
+            --docker-registry-server-user $DOCKER_USERNAME \
+            --docker-registry-server-password $DOCKER_PASSWORD \
+            --multicontainer-config-type compose \
+            --multicontainer-config-file docker-compose.rendered.yml
+
+          az webapp restart \
+            --name $AZURE_WEBAPP_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP
