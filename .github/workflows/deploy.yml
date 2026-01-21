@@ -41,11 +41,14 @@ jobs:
       - name: Set DATABASE_URL
         run: |
           echo "DATABASE_URL=sqlserver://$DB_HOST:1433;database=$DB_NAME;user=$DB_USER;password=$DB_SECURE_PASSWORD;encrypt=true;trustServerCertificate=false" >> $GITHUB_ENV
+          echo "$DATABASE_URL"
 
       - name: Render Compose File
         run: |
           export IMAGE_TAG=$IMAGE_TAG
           export DATABASE_URL=$DATABASE_URL
+          echo "$DATABASE_URL"
+          echo "$DB_SECURE_PASSWORD"
           envsubst < docker-compose.prod.yml > docker-compose.rendered.yml
 
       - name: Build and Push Images
