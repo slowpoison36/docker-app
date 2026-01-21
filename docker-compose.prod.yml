@@ -4,7 +4,7 @@ services:
 
   nginx:
     image: ${DOCKER_USERNAME}/nginx:${IMAGE_TAG}
-    build: ./nginx
+    build: ./task-management/nginx
     ports:
       - "80:80"
     depends_on:
@@ -14,13 +14,13 @@ services:
   frontend:
     image: ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
     build:
-      context: ./frontend
+      context: ./task-management/frontend
       args:
         VITE_API_URL: https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api
 
   backend:
     image: ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
-    build: ./backend
+    build: ./task-management/backend
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
